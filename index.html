@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhoda Q&A Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .robot-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .question-section {
+            margin-bottom: 25px;
+        }
+
+        .question-section label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        #questionInput {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        #questionInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #askButton {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        #askButton:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        #askButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #clearButton {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        #clearButton:hover {
+            background: #e0e0e0;
+        }
+
+        .answer-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .answer-section.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .answer-section label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        #answerBox {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 150px;
+            line-height: 1.8;
+            color: #333;
+            white-space: pre-wrap;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            border: 2px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .examples {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .examples h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .example-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e0e0e0;
+        }
+
+        .example-item:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="robot-icon">🤖</div>
+            <h1>Rhoda Q&A Bot</h1>
+            <p>Ask questions about Rhoda Project guidelines and get instant answers</p>
+        </div>
+
+        <div class="question-section">
+            <label for="questionInput">Your Question:</label>
+            <textarea 
+                id="questionInput" 
+                placeholder="Type your question here... (e.g., How should I mark frames when the robot hits the camera?)"
+            ></textarea>
+        </div>
+
+        <div class="button-group">
+            <button id="askButton">🚀 Ask Question</button>
+            <button id="clearButton">🗑️ Clear</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Thinking...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="answer-section" id="answerSection">
+            <label>Answer:</label>
+            <div id="answerBox"></div>
+        </div>
+
+        <div class="examples">
+            <h3>📚 Example Questions (Click to try):</h3>
+            <div class="example-item" data-question="How should I mark frames when the robot hits the camera?">
+                How should I mark frames when the robot hits the camera?
+            </div>
+            <div class="example-item" data-question="What makes a box on table milestone reliable?">
+                What makes a box on table milestone reliable?
+            </div>
+            <div class="example-item" data-question="When should screening be marked as unhealthy?">
+                When should screening be marked as unhealthy?
+            </div>
+            <div class="example-item" data-question="How to handle simultaneous plastic and paper disposal?">
+                How to handle simultaneous plastic and paper disposal?
+            </div>
+            <div class="example-item" data-question="What if the robot completes only 2 milestones?">
+                What if the robot completes only 2 milestones?
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questionInput = document.getElementById('questionInput');
+        const askButton = document.getElementById('askButton');
+        const clearButton = document.getElementById('clearButton');
+        const answerSection = document.getElementById('answerSection');
+        const answerBox = document.getElementById('answerBox');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const exampleItems = document.querySelectorAll('.example-item');
+
+        // API endpoint - Change this if your bot runs on a different port
+        const API_URL = 'http://localhost:8000/api/v1/query';
+
+        // Ask question function
+        async function askQuestion() {
+            const question = questionInput.value.trim();
+            
+            if (!question) {
+                showError('Please enter a question!');
+                return;
+            }
+
+            // Hide previous answer and error
+            answerSection.classList.remove('show');
+            errorMessage.classList.remove('show');
+            
+            // Show loading
+            loading.classList.add('show');
+            askButton.disabled = true;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: question,
+                        include_sources: false
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Show answer
+                answerBox.textContent = data.answer;
+                answerSection.classList.add('show');
+
+            } catch (error) {
+                showError(`Error: ${error.message}. Make sure your bot is running on http://localhost:8000`);
+            } finally {
+                loading.classList.remove('show');
+                askButton.disabled = false;
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+
+        // Clear function
+        function clearAll() {
+            questionInput.value = '';
+            answerSection.classList.remove('show');
+            errorMessage.classList.remove('show');
+            questionInput.focus();
+        }
+
+        // Event listeners
+        askButton.addEventListener('click', askQuestion);
+        clearButton.addEventListener('click', clearAll);
+
+        // Enter key to submit (Ctrl+Enter for new line)
+        questionInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+                e.preventDefault();
+                askQuestion();
+            }
+        });
+
+        // Example questions click
+        exampleItems.forEach(item => {
+            item.addEventListener('click', () => {
+                questionInput.value = item.dataset.question;
+                questionInput.focus();
+                // Optionally auto-submit
+                // askQuestion();
+            });
+        });
+
+        // Focus on input on load
+        questionInput.focus();
+    </script>
+</body>
+</html>
